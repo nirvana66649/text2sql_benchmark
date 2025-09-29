@@ -1,0 +1,4 @@
+Table,Description,Fields,Example_Questions,Usage_Tips,Multi_Table_Questions,Related_Tables,Join_Conditions
+appellations,"记录葡萄酒产区的基础信息","No, Appelation, County, State, Area, isAVA","产区地理位置查询|AVA认证产区统计","用于查询产区的地理位置或是否为AVA的属性，信息不会随时间变化","有多少种酒不是产自美国葡萄种植区，比产自美国葡萄种植区的酒多多少？|美国葡萄种植区中哪个酒产区的酒总产量没有达到卡拉维拉斯县产区的两倍？","wine","appellations.Appelation = wine.Appelation"
+grapes,"记录葡萄品种的基础信息","ID, Grape, Color","葡萄品种颜色查询|红白葡萄酒分类","用于查询葡萄品种的属性，信息不会随时间变化","2008年红葡萄酒的产量是白葡萄酒的多少倍？|酿造一瓶葡萄酒需要1.2千克的葡萄。在纳帕县生产的葡萄酒一共用了多少吨红葡萄，多少吨白葡萄？|最贵的红葡萄酒比最贵的白葡萄酒贵多少？","wine","grapes.Grape = wine.Grape"
+wine,"记录葡萄酒的详细信息","No, Grape, Winery, Appelation, State, Name, Year, Price, Score, Cases, Drink","葡萄酒生产年份|价格评分分析|产量统计","用于查询葡萄酒的生产年份、价格、评分、产量或酒厂信息","2009年总共生产了多少箱酒，比2007年增长了百分之多少？|98评分的酒的最高价和最低价相差多少？|评分最高的赤霞珠葡萄酒来自哪些酒厂，它们的价格比赤霞珠葡萄酒的平均价高多少？|不同年份葡萄酒产量增长率分析|不同产区葡萄酒数量差异对比|红白葡萄酒产量倍数计算|特定评分葡萄酒价格差异查询","appellations,grapes","wine.Appelation = appellations.Appelation; wine.Grape = grapes.Grape"

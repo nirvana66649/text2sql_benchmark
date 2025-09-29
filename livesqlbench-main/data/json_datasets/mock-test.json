@@ -1,0 +1,127 @@
+[
+  {
+    "db_id": "world_1",
+    "question": "假如每个国家的国民生产总值增长5%（如果预期寿命高于70）或2%（如果预期寿命低于或等于70），全球的总国民生产总值是多少？",
+    "gold_sql": "SELECT SUM(CASE WHEN LifeExpectancy > 70 THEN GNP * 1.05 ELSE GNP * 1.02 END) FROM country"
+  },
+  {
+    "db_id": "world_1",
+    "question": "假设以中文为主要语言的国家现在的国民生产总值是1000000.0，且所有国家国民生产总值增长幅度保持恒定，列出每个位于亚洲的国家的名字、过去的国民生产总值、现在的国民生产总值，和预期的未来的国民生产总值。",
+    "gold_sql": "SELECT name, GNPOld, GNP, GNP + (GNP - GNPOld) AS GNPFuture FROM (SELECT name, GNPOld, 1000000.0 AS GNP, Continent FROM country WHERE Code IN (SELECT CountryCode FROM (SELECT CountryCode, Language, MAX(Percentage) FROM countrylanguage GROUP BY CountryCode) WHERE Language = 'Chinese') UNION ALL SELECT name, GNPOld, GNP, Continent FROM country WHERE Code NOT IN (SELECT CountryCode FROM (SELECT CountryCode, Language, MAX(Percentage) FROM countrylanguage GROUP BY CountryCode) WHERE Language = 'Chinese')) WHERE Continent = 'Asia'"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "有多少种酒产自索诺玛县，比产自纳帕县的酒多多少？",
+    "gold_sql": "SELECT sonoma, sonoma - napa AS diff FROM (SELECT COUNT(*) AS sonoma FROM wine A JOIN appellations B ON A.Appelation = B.Appelation WHERE B.County = 'Sonoma') JOIN (SELECT COUNT(*) AS napa FROM wine A JOIN appellations B ON A.Appelation = B.Appelation WHERE B.County = 'Napa')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "2007年白葡萄酒的产量是红葡萄酒的多少倍？",
+    "gold_sql": "SELECT 1.0 * n_white / n_red AS times FROM (SELECT SUM(A.Cases) AS n_white FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE B.Color = 'White' AND A.Year = '2007') JOIN (SELECT SUM(A.Cases) AS n_red FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE B.Color = 'Red' AND A.Year = '2007')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "假如每种酒的产量减少50箱，2007年白葡萄酒的产量是红葡萄酒的多少倍？",
+    "gold_sql": "SELECT 1.0 * n_white / n_red AS times FROM (SELECT SUM(A.Cases - 50) AS n_white FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE B.Color = 'White' AND A.Year = '2007') JOIN (SELECT SUM(A.Cases - 50) AS n_red FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE B.Color = 'Red' AND A.Year = '2007')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "95评分的酒的最高价和最低价相差多少？",
+    "gold_sql": "SELECT MAX(Price) - MIN(Price) AS diff FROM wine WHERE Score = '95'"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "假如帕洛玛酒厂的酒价格降低5%，95评分的酒的最高价和最低价相差多少？",
+    "gold_sql": "SELECT MAX(Price) - MIN(Price) AS diff FROM (SELECT Price * (1 - 0.05) AS Price, Score FROM wine WHERE Winery = 'Paloma' UNION ALL SELECT Price, Score FROM wine WHERE Winery != 'Paloma') WHERE Score = '95'"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "美国葡萄种植区中哪个酒产区的酒总产量没有达到纳帕谷产区的1.5倍？",
+    "gold_sql": "SELECT A.Appelation FROM wine A JOIN appellations B ON A.Appelation = B.Appelation WHERE B.isAVA = 'Y' GROUP BY A.Appelation HAVING SUM(A.Cases) < 1.5 * (SELECT SUM(Cases) FROM wine WHERE Appelation = 'Napa Valley')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "假如2010年生产的酒产量减少10%，美国葡萄种植区中哪个酒产区的酒总产量没有达到纳帕谷产区的1.5倍？",
+    "gold_sql": "SELECT A.Appelation FROM (SELECT Appelation, Cases FROM wine WHERE Year != '2010' UNION ALL SELECT Appelation, Cases * (1 - 0.1) AS Cases FROM wine WHERE Year = '2010') A JOIN appellations B ON A.Appelation = B.Appelation WHERE B.isAVA = 'Y' GROUP BY A.Appelation HAVING SUM(A.Cases) < 1.5 * (SELECT SUM(Cases) FROM wine WHERE Appelation = 'Napa Valley')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "价格低于50的酒中，有百分之多少的酒评分高于90？",
+    "gold_sql": "SELECT 100.0 * n1 / n2 AS ratio FROM (SELECT COUNT(*) AS n1 FROM wine WHERE Price < '50' AND Score > '90') JOIN (SELECT COUNT(*) AS n2 FROM wine WHERE Price < '50')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "假如用黑比诺葡萄酿造的葡萄酒价格增加10美元，价格低于50的酒中，有百分之多少的酒评分高于90？",
+    "gold_sql": "SELECT 100.0 * n1 / n2 AS ratio FROM (SELECT COUNT(*) AS n1 FROM (SELECT Price, Score FROM wine WHERE Grape != 'Pinot Noir' UNION ALL SELECT Price + 10, Score FROM wine WHERE Grape = 'Pinot Noir') WHERE Price < '50' AND Score > '90') JOIN (SELECT COUNT(*) AS n2 FROM (SELECT Price, Score FROM wine WHERE Grape != 'Pinot Noir' UNION ALL SELECT Price + 10, Score FROM wine WHERE Grape = 'Pinot Noir') WHERE Price < '50')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "价格最低的酒的产区生产的酒中，有哪些酒的评分比价格最低的酒的最高评分高5分以上？给出它们的编号和名字。",
+    "gold_sql": "SELECT No, Name FROM wine WHERE Appelation IN (SELECT Appelation FROM wine WHERE Price = (SELECT MIN(Price) FROM wine)) AND Score > (SELECT MAX(Score) FROM wine WHERE Price = (SELECT MIN(Price) FROM wine)) + 5"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "假如2007年生产的酒价格上涨20%，价格最低的酒的产区生产的酒中，有哪些酒的评分比价格最低的酒的最高评分高5分以上？给出它们的编号和名字。",
+    "gold_sql": "SELECT No, Name FROM (SELECT No, Name, Appelation, Price, Score FROM wine WHERE Year != '2007' UNION ALL SELECT No, Name, Appelation, Price * (1 + 0.2), Score FROM wine WHERE Year = '2007') WHERE Appelation IN (SELECT Appelation FROM (SELECT No, Name, Appelation, Price, Score FROM wine WHERE Year != '2007' UNION ALL SELECT No, Name, Appelation, Price * (1 + 0.2), Score FROM wine WHERE Year = '2007') WHERE Price = (SELECT MIN(Price) FROM (SELECT No, Name, Appelation, Price, Score FROM wine WHERE Year != '2007' UNION ALL SELECT No, Name, Appelation, Price * (1 + 0.2), Score FROM wine WHERE Year = '2007'))) AND Score > (SELECT MAX(Score) FROM (SELECT No, Name, Appelation, Price, Score FROM wine WHERE Year != '2007' UNION ALL SELECT No, Name, Appelation, Price * (1 + 0.2), Score FROM wine WHERE Year = '2007') WHERE Price = (SELECT MIN(Price) FROM (SELECT No, Name, Appelation, Price, Score FROM wine WHERE Year != '2007' UNION ALL SELECT No, Name, Appelation, Price * (1 + 0.2), Score FROM wine WHERE Year = '2007'))) + 5"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "酿造一瓶白葡萄酒需要1.2千克的葡萄。2006年生产的白葡萄酒用了多少吨葡萄？",
+    "gold_sql": "SELECT 1.2 * SUM(A.Cases) * 12 / 1000 AS tons FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE A.Year = '2006' AND B.Color = 'White'"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "酿造一瓶白葡萄酒需要1.2千克的葡萄。假如罗伯特·比亚勒酒厂2006年没有生产葡萄酒，2006年生产的白葡萄酒用了多少吨葡萄？",
+    "gold_sql": "SELECT 1.2 * SUM(A.Cases) * 12 / 1000 AS tons FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE A.Year = '2006' AND B.Color = 'White' AND A.Winery != 'Robert Biale'"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "酿造一瓶葡萄酒需要1.2千克的葡萄。在圣塔芭芭拉县生产的葡萄酒一共用了多少吨红葡萄，多少吨白葡萄？",
+    "gold_sql": "SELECT tons_red, tons_white FROM (SELECT 1.2 * SUM(A.Cases) * 12 / 1000 AS tons_red FROM wine A JOIN grapes B ON A.Grape = B.Grape JOIN appellations C ON A.Appelation = C.Appelation WHERE C.County = 'Santa Barbara' AND B.Color = 'Red') JOIN (SELECT 1.2 * SUM(A.Cases) * 12 / 1000 AS tons_white FROM wine A JOIN grapes B ON A.Grape = B.Grape JOIN appellations C ON A.Appelation = C.Appelation WHERE C.County = 'Santa Barbara' AND B.Color = 'White')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "酿造一瓶葡萄酒需要1.2千克的葡萄。假如所有圣卢西亚高地葡萄酒的产区都不在圣塔芭芭拉县，产区在圣塔芭芭拉县的葡萄酒一共用了多少吨红葡萄，多少吨白葡萄？",
+    "gold_sql": "SELECT tons_red, tons_white FROM (SELECT 1.2 * SUM(A.Cases) * 12 / 1000 AS tons_red FROM wine A JOIN grapes B ON A.Grape = B.Grape JOIN appellations C ON A.Appelation = C.Appelation WHERE C.County = 'Santa Barbara' AND B.Color = 'Red' AND A.Appelation != 'Santa Lucia Highlands') JOIN (SELECT 1.2 * SUM(A.Cases) * 12 / 1000 AS tons_white FROM wine A JOIN grapes B ON A.Grape = B.Grape JOIN appellations C ON A.Appelation = C.Appelation WHERE C.County = 'Santa Barbara' AND B.Color = 'White' AND A.Appelation != 'Santa Lucia Highlands')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "评分最高的黑比诺葡萄酒来自哪些酒厂，它们的价格比黑比诺葡萄酒的平均价高多少？",
+    "gold_sql": "SELECT Winery, Price - (SELECT AVG(Price) FROM wine WHERE Name = 'Pinot Noir') AS diff FROM wine WHERE Name = 'Pinot Noir' AND Score = (SELECT MAX(Score) FROM wine WHERE Name = 'Pinot Noir')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "假如2006年生产的酒评分增加5分，评分最高的黑比诺葡萄酒来自哪些酒厂，它们的价格比黑比诺葡萄酒的平均价高多少？",
+    "gold_sql": "SELECT Winery, Price - (SELECT AVG(Price) FROM wine WHERE Name = 'Pinot Noir') AS diff FROM (SELECT Winery, Price, Score + 5 AS Score, Name FROM wine WHERE Year = '2006' UNION ALL SELECT Winery, Price, Score, Name FROM wine WHERE Year != '2006') WHERE Name = 'Pinot Noir' AND Score = (SELECT MAX(Score) FROM (SELECT Score + 5 AS Score, Name FROM wine WHERE Year = '2006' UNION ALL SELECT Score, Name FROM wine WHERE Year != '2006') WHERE Name = 'Pinot Noir')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "最便宜的白葡萄酒比最便宜的红葡萄酒贵多少？",
+    "gold_sql": "SELECT min_white - min_red AS diff FROM (SELECT MIN(A.Price) AS min_white FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE B.Color = 'White') JOIN (SELECT MIN(A.Price) AS min_red FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE B.Color = 'Red')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "假如基安蒂酒厂的酒涨价15%，最便宜的白葡萄酒比最便宜的红葡萄酒贵多少？",
+    "gold_sql": "SELECT min_white - min_red AS diff FROM (SELECT MIN(Price) AS min_white FROM (SELECT A.Price * (1 + 0.15) AS Price, B.Color FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE A.Winery = 'Chiarello Family' UNION ALL SELECT A.Price, B.Color FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE A.Winery != 'Chiarello Family') WHERE Color = 'White') JOIN (SELECT MIN(Price) AS min_red FROM (SELECT A.Price * (1 + 0.15) AS Price, B.Color FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE A.Winery = 'Chiarello Family' UNION ALL SELECT A.Price, B.Color FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE A.Winery != 'Chiarello Family') WHERE Color = 'Red')"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "如果一个酒厂连续3年生产的酒评分不低于85，它将被评为‘优秀酒厂’。有多少百分比的酒厂是优秀酒厂？",
+    "gold_sql": "SELECT 100.0 * COUNT(DISTINCT Winery) / (SELECT COUNT(DISTINCT Winery) FROM wine) AS percent FROM (SELECT A.Winery, A.No, A.Year, A.Score, B.No, B.Year, B.Score, C.No, C.Year, C.Score FROM wine A JOIN wine B ON A.Winery = B.Winery JOIN wine C ON A.Winery = C.Winery WHERE A.Score >= 85 AND B.Score >= 85 AND C.Score >= 85 AND B.Year - A.Year = 1 AND C.Year - B.Year = 1)"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "如果一个酒厂连续3年生产的酒评分不低于85，它将被评为‘优秀酒厂’。假如用仙粉黛葡萄酿造的酒评分增加3分，有多少百分比的酒厂是优秀酒厂？",
+    "gold_sql": "SELECT 100.0 * COUNT(DISTINCT Winery) / (SELECT COUNT(DISTINCT Winery) FROM wine) AS percent FROM (SELECT A.Winery, A.No, A.Year, A.Score, B.No, B.Year, B.Score, C.No, C.Year, C.Score FROM (SELECT Winery, No, Year, Score + 3 AS Score FROM wine WHERE Grape = 'Zinfandel' UNION ALL SELECT Winery, No, Year, Score FROM wine WHERE Grape != 'Zinfandel') A JOIN (SELECT Winery, No, Year, Score + 3 AS Score FROM wine WHERE Grape = 'Zinfandel' UNION ALL SELECT Winery, No, Year, Score FROM wine WHERE Grape != 'Zinfandel') B ON A.Winery = B.Winery JOIN (SELECT Winery, No, Year, Score + 3 AS Score FROM wine WHERE Grape = 'Zinfandel' UNION ALL SELECT Winery, No, Year, Score FROM wine WHERE Grape != 'Zinfandel') C ON A.Winery = C.Winery WHERE A.Score >= 85 AND B.Score >= 85 AND C.Score >= 85 AND B.Year - A.Year = 1 AND C.Year - B.Year = 1)"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "哪年红葡萄酒的产量最高，比当年白葡萄酒的产量高多少？",
+    "gold_sql": "SELECT Year, cases_red - cases_white AS diff FROM (SELECT A.Year, SUM(A.Cases) AS cases_red FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE B.Color = 'Red' GROUP BY A.Year ORDER BY SUM(A.Cases) DESC LIMIT 1) JOIN (SELECT SUM(A.Cases) AS cases_white FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE B.Color = 'White' AND Year = (SELECT A.Year FROM wine A JOIN grapes B ON A.Grape = B.Grape WHERE B.Color = 'Red' GROUP BY A.Year ORDER BY SUM(A.Cases) DESC LIMIT 1))"
+  },
+  {
+    "db_id": "wine_1",
+    "question": "假如卡莱尔酒厂的酒产量增加50%，哪年红葡萄酒的产量最高，比当年白葡萄酒的产量高多少？",
+    "gold_sql": "SELECT Year, cases_red - cases_white AS diff FROM (SELECT A.Year, SUM(A.Cases) AS cases_red FROM (SELECT Grape, Year, Cases * (1 + 0.5) AS Cases FROM wine WHERE Winery = 'Carlisle' UNION ALL SELECT Grape, Year, Cases FROM wine WHERE Winery != 'Carlisle') A JOIN grapes B ON A.Grape = B.Grape WHERE B.Color = 'Red' GROUP BY A.Year ORDER BY SUM(A.Cases) DESC LIMIT 1) JOIN (SELECT SUM(A.Cases) AS cases_white FROM (SELECT Grape, Year, Cases * (1 + 0.5) AS Cases FROM wine WHERE Winery = 'Carlisle' UNION ALL SELECT Grape, Year, Cases FROM wine WHERE Winery != 'Carlisle') A JOIN grapes B ON A.Grape = B.Grape WHERE B.Color = 'White' AND Year = (SELECT A.Year FROM (SELECT Grape, Year, Cases * (1 + 0.5) AS Cases FROM wine WHERE Winery = 'Carlisle' UNION ALL SELECT Grape, Year, Cases FROM wine WHERE Winery != 'Carlisle') A JOIN grapes B ON A.Grape = B.Grape WHERE B.Color = 'Red' GROUP BY A.Year ORDER BY SUM(A.Cases) DESC LIMIT 1))"
+  }
+]
