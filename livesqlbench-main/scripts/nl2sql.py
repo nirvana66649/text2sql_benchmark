@@ -56,13 +56,12 @@ class NL2SQLProcessor:
         self.sql_validator = SQLValidator(self.llm_openai, self.db_id, self.db)
         self.prompt_builder = PromptBuilder(self.db_id)
         
-    def process_question(self, question: str, use_few_shot: bool = True) -> dict:
+    def process_question(self, question: str) -> dict:
         """
         处理自然语言问题，生成SQL查询
         
         Args:
             question: 自然语言问题
-            use_few_shot: 是否使用few-shot示例
             
         Returns:
             包含SQL查询和相关信息的字典
@@ -77,14 +76,12 @@ class NL2SQLProcessor:
             print(f"✅ 选择的表: {table_selection_result.tables}")
             print(f"📊 置信度: {table_selection_result.confidence_score:.2f}")
             
-            # 第二步：示例选择（如果启用few-shot）
-            example_selection_result = None
-            if use_few_shot:
-                print("📚 开始选择few-shot示例...")
-                example_selection_result = self.example_selector.get_example_selection_result(
-                    self.db_id, question, table_selection_result.tables
-                )
-                print(f"✅ 选择了 {len(example_selection_result.selected_examples)} 个示例")
+            # 第二步：示例选择（强制启用 few-shot）
+            print("📚 开始选择few-shot示例...")
+            example_selection_result = self.example_selector.get_example_selection_result(
+                self.db_id, question, table_selection_result.tables
+            )
+            print(f"✅ 选择了 {len(example_selection_result.selected_examples)} 个示例")
             
             # 第三步：使用解耦后的SQL生成器生成SQL
             print("🔧 开始生成SQL查询...")
@@ -120,7 +117,6 @@ def main():
     parser = argparse.ArgumentParser(description='NL2SQL处理器')
     parser.add_argument('--db_id', type=str, required=True, help='数据库ID')
     parser.add_argument('--question', type=str, required=True, help='自然语言问题')
-    parser.add_argument('--no_few_shot', action='store_true', help='禁用few-shot示例')
     parser.add_argument('--output', type=str, help='输出文件路径')
     
     args = parser.parse_args()
@@ -129,10 +125,7 @@ def main():
     processor = NL2SQLProcessor(args.db_id)
     
     # 处理问题
-    result = processor.process_question(
-        args.question, 
-        use_few_shot=not args.no_few_shot
-    )
+    result = processor.process_question(args.question)
     
     # 输出结果
     if args.output:
@@ -165,7 +158,7 @@ def generate_sql_only(db_id: str, question: str) -> str:
     """
     try:
         processor = NL2SQLProcessor(db_id)
-        result = processor.process_question(question, use_few_shot=True)
+        result = processor.process_question(question)
         
         if result['success']:
             return result['sql_query']

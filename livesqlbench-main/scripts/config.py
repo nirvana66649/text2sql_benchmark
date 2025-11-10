@@ -34,7 +34,7 @@ EXAMPLES_PATH = current_dir.parent / "examples"
 # OpenAI配置
 OPENAI_CONFIG = {
     "model": "gpt-5-fast",
-    "base_url": "https://api.gpt.ge/v1",
+    "base_url": "your url",
     "api_key": "your api key",
     "temperature": 0.5
 }
@@ -42,16 +42,18 @@ OPENAI_CONFIG = {
 # Anthropic配置
 ANTHROPIC_CONFIG = {
     "model_name": "cc-sonnet-4-20250514-thinking",
-    "base_url": "https://api.gpt.ge",
+    "base_url": "your url",
     "api_key": "your api key",
     "temperature": 0.3
 }
 
 # 嵌入模型配置
 EMBEDDING_CONFIG = {
-    "base_url": "https://api.gpt.ge/v1",
+    "base_url": "your url",
     "api_key": "your api key",
-    "model": "text-embedding-3-large"
+    "model": "text-embedding-3-large",
+    "default_headers": {"User-Agent": "langchain-openai"},
+    "http_client": None  # 将在运行时设置为跳过SSL验证的客户端
 }
 
 # === 算法参数配置 ===
@@ -84,7 +86,22 @@ def get_llm_instance():
 
 def get_embedding_config():
     """获取嵌入模型配置"""
-    return EMBEDDING_CONFIG
+    import httpx
+    import ssl
+    
+    # 创建跳过SSL验证的HTTP客户端
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+    
+    http_client = httpx.Client(
+        verify=False,  # 跳过SSL验证
+        timeout=30.0
+    )
+    
+    config = EMBEDDING_CONFIG.copy()
+    config["http_client"] = http_client
+    return config
 
 def get_db_path(db_id: str) -> str:
     """获取数据库路径"""

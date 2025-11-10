@@ -35,7 +35,7 @@ class PromptBuilder:
         # 获取选中表的 m-schema
         selected_table_infos = get_selected_mschema(self.db_id, table_selection.tables)
         
-        prompt = f"""你是一个专业的SQL查询生成专家。请根据给定的自然语言问题和数据库表结构，生成准确的SQL查询。
+        prompt = f"""你是一个专业的SQLite查询生成专家。请根据给定的自然语言问题和数据库表结构，生成准确的SQLite查询。
 
 数据库ID: {self.db_id}
 

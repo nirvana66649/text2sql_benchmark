@@ -1,379 +1,381 @@
-# NL2SQL 智能问答系统（多数据库）
+# NL2SQL Intelligent Q&A System (Multi-Database)
 
-> 基于 **GPT-4o + Claude Sonnet 4** 双模型架构的自然语言转 SQL 系统，集成 M-Schema 表结构理解、智能表选择与简化 RAG 检索，支持复杂推理和多数据库任务。
-
----
-
-## 📌 项目简介
-
-本项目实现了一个基于 **LangChain + OpenAI GPT-4o + Anthropic Claude Sonnet 4** 的高性能自然语言转 SQL 系统（NL2SQL），采用双模型架构和简化的 RAG（检索增强生成）技术，可将用户输入的自然语言问题自动转化为 SQLite 可执行的 SQL 查询语句。
-
-### 🚀 核心特性
-
-1. ✅ **双模型架构**：GPT-4o + Claude Sonnet 4 协同生成，自动选择最优 SQL
-2. ✅ **M-Schema 集成**：深度理解数据库表结构、字段关系和约束条件
-3. ✅ **智能表选择**：基于 Pydantic 的严格表名验证和语义相关性筛选
-4. ✅ **简化 RAG 检索**：纯语义相似性的 few-shot 示例检索，避免复杂的权重计算
-5. ✅ **推理类型识别**：支持加法、减法、乘法、除法、假设条件、常识推理
-6. ✅ **SQL 验证与修复**：自动语法检查和错误修复机制
-7. ✅ **多数据库兼容**：支持 10+ 个典型数据库场景
+> Based on **GPT-4o + Claude Sonnet 4** dual-model architecture for natural language to SQL system, integrating M-Schema table structure understanding, intelligent table selection, and simplified RAG retrieval, supporting complex reasoning and multi-database tasks.
 
 ---
 
-## ⚙️ 技术架构
+## 📌 Project Overview
 
-### 1. 双模型协同架构
+This project implements a high-performance natural language to SQL system (NL2SQL) based on **LangChain + OpenAI GPT-4o + Anthropic Claude Sonnet 4**, using a dual-model architecture and simplified RAG (Retrieval-Augmented Generation) technology to automatically convert user input natural language questions into SQLite executable SQL queries.
+
+The database and training data can be downloaded from the Archer official website: `https://sig4kg.github.io/archer-bench/`.
+
+### 🚀 Key Features
+
+1. ✅ **Dual-Model Architecture**: GPT-4o + Claude Sonnet 4 collaborate to generate and automatically select the optimal SQL
+2. ✅ **M-Schema Integration**: Deep understanding of database table structures, field relationships, and constraints
+3. ✅ **Intelligent Table Selection**: Strict table name validation and semantic relevance filtering based on Pydantic
+4. ✅ **Simplified RAG Retrieval**: Few-shot example retrieval based purely on semantic similarity, avoiding complex weight calculations
+5. ✅ **Reasoning Type Recognition**: Supports addition, subtraction, multiplication, division, hypothetical conditions, and commonsense reasoning
+6. ✅ **SQL Validation and Repair**: Automatic syntax checking and error repair mechanism
+7. ✅ **Multi-Database Compatibility**: Supports 10+ typical database scenarios
+
+---
+
+## ⚙️ Technical Architecture
+
+### 1. Dual-Model Collaborative Architecture
 
 ```python
-# GPT-4o 负责表选择和 SQL 生成
+# GPT-4o handles table selection and SQL generation
 llm_openai = ChatOpenAI(model='gpt-4o', temperature=0.3)
 
-# Claude Sonnet 4 负责 SQL 生成和优化
+# Claude Sonnet 4 handles SQL generation and optimization
 llm_anthropic = ChatAnthropic(model_name="cc-sonnet-4-20250514-thinking", temperature=0.3)
 ```
 
-### 2. M-Schema 表结构理解
+### 2. M-Schema Table Structure Understanding
 
-- 集成 M-Schema 引擎，深度解析数据库表结构
-- 自动提取表关系、字段类型、约束条件
-- 支持复杂查询的表关联和字段映射
+- Integrated M-Schema engine for deep parsing of database table structures
+- Automatically extracts table relationships, field types, and constraints
+- Supports table associations and field mapping for complex queries
 
-### 3. 智能表选择机制
+### 3. Intelligent Table Selection Mechanism
 
 ```python
 class TableList(BaseModel):
     tables: List[str] = Field(description="List of relevant table names")
 ```
 
-- 使用 Pydantic 模型严格控制表名输出格式
-- 结合表描述和 M-Schema 进行语义相关性判断
-- 自动过滤无关表，提升查询效率
+- Uses Pydantic models to strictly control table name output format
+- Combines table descriptions and M-Schema for semantic relevance judgment
+- Automatically filters irrelevant tables to improve query efficiency
 
-### 4. 简化 RAG 检索系统
+### 4. Simplified RAG Retrieval System
 
-- **向量数据库**：Chroma + OpenAI Embeddings
-- **检索策略**：纯语义相似性匹配，返回最相关的示例
-- **示例格式**：包含推理类型、常识知识和 SQL 模板
-- **简化设计**：移除复杂的表匹配权重计算，专注于语义相似性
+- **Vector Database**: Chroma + OpenAI Embeddings
+- **Retrieval Strategy**: Pure semantic similarity matching, returning the most relevant examples
+- **Example Format**: Includes reasoning types, commonsense knowledge, and SQL templates
+- **Simplified Design**: Removes complex table matching weight calculations, focusing on semantic similarity
 
-### 5. SQL 生成与优化
+### 5. SQL Generation and Optimization
 
-- **推理类型识别**：`+`（加法）、`-`（减法）、`*`（乘法）、`/`（除法）、`H`（假设）、`C`（常识）
-- **双模型生成**：GPT-4o 和 Claude 分别生成 SQL
-- **智能选择**：基于正确性、语法兼容性、高效性自动选择最优 SQL
-- **验证修复**：EXPLAIN QUERY PLAN 验证 + 自动错误修复
-- **简化流程**：专注于语义相似性检索，避免复杂的动态权重计算
+- **Reasoning Type Recognition**: `+` (addition), `-` (subtraction), `*` (multiplication), `/` (division), `H` (hypothetical), `C` (commonsense)
+- **Dual-Model Generation**: GPT-4o and Claude generate SQL separately
+- **Intelligent Selection**: Automatically selects the optimal SQL based on correctness, syntax compatibility, and efficiency
+- **Validation and Repair**: EXPLAIN QUERY PLAN validation + automatic error repair
+- **Simplified Process**: Focuses on semantic similarity retrieval, avoiding complex dynamic weight calculations
 
 ---
 
-## 🧩 项目结构
+## 🧩 Project Structure
 
 ```text
 livesqlbench-main/
-├── nl2sql.py                     # 主程序（双模型架构）
-├── evaluation.py                 # 批量评估脚本
-├── examples/                     # few-shot 示例（按数据库组织）
+├── nl2sql.py                     # Main program (dual-model architecture)
+├── evaluation.py                 # Batch evaluation script
+├── examples/                     # Few-shot examples (organized by database)
 │   ├── bike_1_examples.py
 │   ├── concert_singer_examples.py
 │   └── ...
-├── database/                     # 多数据库 SQLite 文件
+├── database/                     # Multi-database SQLite files
 │   ├── bike_1/
 │   ├── concert_singer/
 │   └── ...
-├── M-Schema/                     # M-Schema 表结构引擎
+├── M-Schema/                     # M-Schema table structure engine
 │   ├── schema_engine.py
 │   ├── m_schema.py
 │   └── ...
-├── {db_id}_table_description.csv # 表结构描述文件
-├── requirements.txt              # Python 依赖包
-└── README.md                     # 本文件
+├── {db_id}_table_description.csv # Table structure description file
+├── requirements.txt              # Python dependencies
+└── README.md                     # This file
 ```
 
 ---
 
-## 🧪 使用说明
+## 🧪 Usage Instructions
 
-### 1. 环境配置
+### 1. Environment Setup
 
 ```bash
-# 创建虚拟环境
+# Create virtual environment
 cd ./livesqlbench/livesqlbench-main
 conda create -n livesqlbench python=3.10 -y
 conda activate livesqlbench
 
-# 安装依赖
+# Install dependencies
 cd ./livesqlbench/livesqlbench-main/config
 pip install -r requirements.txt
 ```
 
-### 2. API 配置
+### 2. API Configuration
 
-系统使用以下 API 端点：
+The system uses the following API endpoints:
 
-- **OpenAI GPT-4o**：`https://api.gpt.ge/v1`
-- **Anthropic Claude**：`https://api.gpt.ge`
-- **OpenAI Embeddings**：`https://api.gpt.ge/v1`
+- **OpenAI GPT-4o**: `https://api.gpt.ge/v1`
+- **Anthropic Claude**: `https://api.gpt.ge`
+- **OpenAI Embeddings**: `https://api.gpt.ge/v1`
 
-please remember to switch to your own base url
+Please remember to switch to your own base URL
 ```python
-# API Key 配置示例
+# API Key Configuration Example
 api_key = "your api key"
 ```
 
-### 3. M-Schema 配置
+### 3. M-Schema Configuration
 
-M-Schema 是系统的核心表结构理解引擎，需要正确配置才能正常工作。
+M-Schema is the core table structure understanding engine of the system and needs to be correctly configured to work properly.
 
-#### 3.1 M-Schema 目录结构
+#### 3.1 M-Schema Directory Structure
 
 ```text
 M-Schema/
-├── __init__.py              # 包初始化文件
-├── schema_engine.py         # 主引擎文件
-├── m_schema.py             # M-Schema 核心类
-├── utils.py                # 工具函数
-├── requirements.txt         # M-Schema 专用依赖
-├── README.md               # M-Schema 说明文档
-└── example.py              # 使用示例
+├── __init__.py              # Package initialization file
+├── schema_engine.py         # Main engine file
+├── m_schema.py              # M-Schema core class
+├── utils.py                 # Utility functions
+├── requirements.txt         # M-Schema-specific dependencies
+├── README.md                # M-Schema documentation
+└── example.py               # Usage example
 ```
 
-#### 3.2 M-Schema 依赖安装，具体参考：https://github.com/XGenerationLab/M-Schema
+#### 3.2 M-Schema Dependency Installation, refer to: https://github.com/XGenerationLab/M-Schema
 
-M-Schema 需要额外的依赖包，请确保安装：
+M-Schema requires additional dependencies, ensure installation:
 
 ```bash
-# 安装 M-Schema 专用依赖，conda激活之后
+# Install M-Schema-specific dependencies after activating conda
 git clone https://github.com/XGenerationLab/M-Schema.git
 cd M-Schema
 pip install -r requirements.txt
 ```
 
-#### 3.3 M-Schema 工作原理
+#### 3.3 M-Schema Working Principle
 
-M-Schema 引擎通过以下步骤解析数据库结构：
+The M-Schema engine parses database structures through the following steps:
 
-1. **数据库连接**：使用 SQLAlchemy 连接到 SQLite 数据库
-2. **元数据提取**：自动提取表结构、字段类型、约束条件
-3. **关系分析**：分析表间的主键、外键关系
-4. **Schema 生成**：生成结构化的 M-Schema 描述
+1. **Database Connection**: Connects to SQLite databases using SQLAlchemy
+2. **Metadata Extraction**: Automatically extracts table structures, field types, and constraints
+3. **Relationship Analysis**: Analyzes primary key and foreign key relationships between tables
+4. **Schema Generation**: Generates structured M-Schema descriptions
 
-#### 3.4 M-Schema 配置示例
+#### 3.4 M-Schema Configuration Example
 
 ```python
 from sqlalchemy import create_engine
 from M-Schema.schema_engine import SchemaEngine
 
-# 创建数据库引擎
+# Create database engine
 db_path = "database/wine_1/wine_1.sqlite"
 abs_path = os.path.abspath(db_path)
 db_engine = create_engine(f"sqlite:///{abs_path}")
 
-# 初始化 M-Schema 引擎
+# Initialize M-Schema engine
 schema_engine = SchemaEngine(engine=db_engine, db_name="wine_1")
 
-# 获取 M-Schema 描述
+# Get M-Schema description
 mschema = schema_engine.mschema
 mschema_str = mschema.to_mschema()
 print(mschema_str)
 ```
 
-#### 3.5 M-Schema 输出格式
+#### 3.5 M-Schema Output Format
 
-M-Schema 生成的描述包含：
+M-Schema generates descriptions containing:
 
-- **表结构**：表名、字段名、数据类型、约束
-- **关系信息**：主键、外键、索引
-- **语义描述**：字段的业务含义和用途
-- **查询建议**：常用的查询模式和示例
+- **Table Structure**: Table names, field names, data types, constraints
+- **Relationship Information**: Primary keys, foreign keys, indexes
+- **Semantic Description**: Business meaning and usage of fields
+- **Query Suggestions**: Common query patterns and examples
 
-#### 3.6 故障排除
+#### 3.6 Troubleshooting
 
-如果遇到 M-Schema 相关错误：
+If encountering M-Schema-related errors:
 
-1. **依赖问题**：确保安装了所有 M-Schema 依赖
-2. **路径问题**：检查数据库文件路径是否正确
-3. **权限问题**：确保有读取数据库文件的权限
-4. **版本兼容**：确保 SQLAlchemy 版本兼容（>=1.4.0）
+1. **Dependency Issues**: Ensure all M-Schema dependencies are installed
+2. **Path Issues**: Check if the database file path is correct
+3. **Permission Issues**: Ensure read permissions for the database file
+4. **Version Compatibility**: Ensure SQLAlchemy version compatibility (>=1.4.0)
 
-### 4. 使用方式
+### 4. Usage Modes
 
-#### 交互式 CLI 模式
+#### Interactive CLI Mode
 
 ```bash
 cd livesqlbench-main/scripts
-python nl2sql.py --db_id soccer_1 --question 具体问题
+python nl2sql.py --db_id soccer_1 --question specific question
 
-示例：
-python nl2sql.py --db_id soccer_1 --question "传球得分包括5%的弧线球、5%的任意球精度、15%的长传、20%的传中、20%的视野和35%的短传。列出传球得分最高的前10名球员的姓名和当前年龄。"
+Example:
+python nl2sql.py --db_id soccer_1 --question "Passing scores include 5% curve balls, 5% free kick accuracy, 15% long passes, 20% crosses, 20% vision, and 35% short passes. List the names and current ages of the top 10 players with the highest passing scores."
 ```
 
-#### 程序化调用：调用 `generate_sql_only` 函数，同理还是需要输入数据库 ID 和自然语言问题。
+#### Programmatic Call: Call the `generate_sql_only` function, similarly requiring input of database ID and natural language question.
 
 ```python
 from nl2sql import generate_sql_only
 
-# 单次查询
+# Single query
 sql = generate_sql_only(
     db_id="wine_1",
-    question="有多少种酒产自索诺玛县，比产自纳帕县的酒多多少？"
+    question="How many types of wine are produced in Sonoma County, and how many more than those produced in Napa County?"
 )
 print(sql)
 
-# 批量处理
+# Batch processing
 questions = [
-    ("concert_singer", "列出所有歌手的姓名"),
-    ("bike_1", "统计每个车站的停靠点数量"),
-    ("wine_1", "有多少种酒产自索诺玛县，比产自纳帕县的酒多多少？")
+    ("concert_singer", "List the names of all singers"),
+    ("bike_1", "Count the number of docking points at each station"),
+    ("wine_1", "How many types of wine are produced in Sonoma County, and how many more than those produced in Napa County?")
 ]
 
 for db_id, question in questions:
     sql = generate_sql_only(db_id, question)
-    print(f"数据库: {db_id}")
-    print(f"问题: {question}")
+    print(f"Database: {db_id}")
+    print(f"Question: {question}")
     print(f"SQL: {sql}\n")
 ```
 
-### 5. 支持的数据库
+### 5. Supported Databases
 
-系统支持以下 10 个数据库：
+The system supports the following 10 databases:
 
-- `bike_1` - 自行车租赁系统
-- `concert_singer` - 音乐会歌手管理
-- `customers_and_products_contacts` - 客户产品联系
-- `driving_school` - 驾校管理
-- `formula_1` - F1 赛车数据
-- `hospital_1` - 医院管理系统
-- `riding_club` - 骑行俱乐部
-- `soccer_1` - 足球数据
-- `wine_1` - 葡萄酒数据库
-- `world_1` - 世界地理数据
+- `bike_1` - Bicycle rental system
+- `concert_singer` - Concert singer management
+- `customers_and_products_contacts` - Customer product contacts
+- `driving_school` - Driving school management
+- `formula_1` - F1 racing data
+- `hospital_1` - Hospital management system
+- `riding_club` - Riding club
+- `soccer_1` - Soccer data
+- `wine_1` - Wine database
+- `world_1` - World geography data
 
 ---
 
-## 📊 评估与测试
+## 📊 Evaluation and Testing
 
-### 1. 批量评估
+### 1. Batch Evaluation
 
-系统提供了完善的评估工具来测试NL2SQL的性能：
+The system provides comprehensive evaluation tools to test NL2SQL performance:
 
 ```bash
 cd livesqlbench-main/scripts
 
-# 运行评估（需要提供测试文件）
+# Run evaluation (requires test file)
 python evaluation.py test_data.json
 
-# 创建示例测试文件
+# Create sample test file
 python evaluation.py --create-sample
 
-# 查看使用帮助
+# View usage help
 python evaluation.py
 ```
 
-### 2. 测试数据格式
+### 2. Test Data Format
 
-测试文件应为JSON格式，每个样本包含以下字段：
+Test files should be in JSON format, each sample containing the following fields:
 
 ```json
 [
   {
     "db_id": "soccer_1",
-    "question": "列出所有球员的姓名",
+    "question": "List the names of all players",
     "gold_sql": "SELECT player_name FROM Player"
   },
   {
     "db_id": "wine_1",
-    "question": "有多少种酒产自索诺玛县，比产自纳帕县的酒多多少？",
+    "question": "How many types of wine are produced in Sonoma County, and how many more than those produced in Napa County?",
     "gold_sql": "SELECT sonoma, sonoma - napa AS diff FROM (SELECT COUNT(*) AS sonoma FROM wine A JOIN appellations B ON A.Appelation = B.Appelation WHERE B.County = 'Sonoma') JOIN (SELECT COUNT(*) AS napa FROM wine A JOIN appellations B ON A.Appelation = B.Appelation WHERE B.County = 'Napa')"
   }
 ]
 ```
 
-**字段说明**：
-- `db_id`：数据库标识符（必须是支持的10个数据库之一）
-- `question`：自然语言问题
-- `gold_sql` 或 `query`：标准SQL查询（用于结果比较）
+**Field Description**:
+- `db_id`: Database identifier (must be one of the 10 supported databases)
+- `question`: Natural language question
+- `gold_sql` or `query`: Standard SQL query (used for result comparison)
 
-### 3. 评估指标
+### 3. Evaluation Metrics
 
-评估系统会输出以下指标：
+The evaluation system outputs the following metrics:
 
-- **总样本数**：测试集中的样本总数
-- **SQL生成成功数**：成功生成SQL的样本数
-- **SQL执行成功数**：生成的SQL能够成功执行的样本数
-- **结果匹配数**：执行结果与标准答案完全匹配的样本数
-- **SQL执行结果匹配准确率**：结果匹配数 / 总样本数
-- **SQL生成失败数**：无法生成SQL的样本数
-- **SQL执行失败数**：生成的SQL执行出错的样本数
+- **Total Samples**: Total number of samples in the test set
+- **SQL Generation Success Count**: Number of samples successfully generating SQL
+- **SQL Execution Success Count**: Number of generated SQLs successfully executed
+- **Result Match Count**: Number of samples where execution results match the standard answer
+- **SQL Execution Result Match Accuracy**: Result match count / total sample count
+- **SQL Generation Failure Count**: Number of samples failing to generate SQL
+- **SQL Execution Failure Count**: Number of generated SQLs failing to execute
 
-### 4. 推理类型示例
+### 4. Reasoning Type Examples
 
-系统支持多种推理类型：
+The system supports various reasoning types:
 
-- **算术推理**：`+` 加法、`-` 减法、`*` 乘法、`/` 除法
-- **逻辑推理**：`H` 假设条件推理、`C` 常识推理
-- **复杂查询**：多表 JOIN、子查询、聚合函数
-
----
-
-## 💰 成本估算
-
-### 单次推理成本
-
-- **表选择**：GPT-4o + Pydantic 解析 ≈ $0.01
-- **RAG 检索**：Embedding 向量查找 ≈ $0.005
-- **SQL 生成**：双模型生成 + 选择 ≈ $0.03
-- **验证修复**：SQL 验证 ≈ $0.005
-
-**总计**：约 $0.05 每次推理
-
-### 批量评估成本
-
-- 预计样本量：500 条
-- 总成本预估：约 $25-$35
+- **Arithmetic Reasoning**: `+` addition, `-` subtraction, `*` multiplication, `/` division
+- **Logical Reasoning**: `H` hypothetical condition reasoning, `C` commonsense reasoning
+- **Complex Queries**: Multi-table JOIN, subqueries, aggregate functions
 
 ---
 
-## 🔧 技术细节
+## 💰 Cost Estimation
 
-### 1. 表选择流程
+### Single Inference Cost
+
+- **Table Selection**: GPT-4o + Pydantic parsing ≈ $0.01
+- **RAG Retrieval**: Embedding vector lookup ≈ $0.005
+- **SQL Generation**: Dual-model generation + selection ≈ $0.03
+- **Validation and Repair**: SQL validation ≈ $0.005
+
+**Total**: Approximately $0.05 per inference
+
+### Batch Evaluation Cost
+
+- Estimated sample size: 500
+- Total cost estimate: Approximately $25-$35
+
+---
+
+## 🔧 Technical Details
+
+### 1. Table Selection Process
 
 ```python
 def select_tables_via_parser(llm, question: str, db_id: str, db: SQLDatabase) -> List[str]:
-    # 1. 获取表描述和 M-Schema
-    # 2. 使用 Pydantic 解析器严格控制输出
-    # 3. 验证表名有效性
-    # 4. 返回相关表列表
+    # 1. Retrieve table descriptions and M-Schema
+    # 2. Use Pydantic parser to strictly control output
+    # 3. Validate table name validity
+    # 4. Return relevant table list
 ```
 
-### 2. SQL 生成流程
+### 2. SQL Generation Process
 
 ```python
 def generate_sql_only(db_id: str, question: str) -> str:
-    # 1. 智能表选择
-    # 2. 简化 RAG 示例检索（纯语义相似性）
-    # 3. M-Schema 提取
-    # 4. 双模型 SQL 生成
-    # 5. 智能选择最优 SQL
-    # 6. 验证与修复
+    # 1. Intelligent table selection
+    # 2. Simplified RAG example retrieval (pure semantic similarity)
+    # 3. M-Schema extraction
+    # 4. Dual-model SQL generation
+    # 5. Intelligent selection of optimal SQL
+    # 6. Validation and repair
 ```
 
-### 3. 错误处理机制
+### 3. Error Handling Mechanism
 
-- **语法验证**：使用 `EXPLAIN QUERY PLAN` 验证 SQL 语法
-- **自动修复**：检测到错误时自动调用修复模型
-- **回退机制**：修复失败时返回清理后的原始 SQL
+- **Syntax Validation**: Validates SQL syntax using `EXPLAIN QUERY PLAN`
+- **Automatic Repair**: Automatically calls repair model upon detecting errors
+- **Fallback Mechanism**: Returns cleaned original SQL if repair fails
 
 ---
 
-## 🙌 致谢与说明
+## 🙌 Acknowledgments and Notes
 
-- 本项目基于 **Archer Benchmark** 官方数据集开发
-- 集成 **M-Schema** 表结构理解引擎
-- 使用 **LangChain** 框架构建 AI 应用
-- 支持 **OpenAI GPT-4o** 和 **Anthropic Claude Sonnet 4** 双模型架构
+- This project is developed based on the **Archer Benchmark** official dataset
+- Integrated **M-Schema** table structure understanding engine
+- Built using the **LangChain** framework for AI applications
+- Supports **OpenAI GPT-4o** and **Anthropic Claude Sonnet 4** dual-model architecture
 
-### 免责声明
+### Disclaimer
 
-- 本项目仅用于学术研究与 Benchmark 提交
-- 所有模型调用基于公开 API，调用成本需自理
-- 示例数据库及结构来自 Archer Benchmark 官方数据集
+- This project is for academic research and Benchmark submission only
+- All model calls are based on public APIs, and call costs must be borne by the user
+- Example databases and structures are from the Archer Benchmark official dataset
