@@ -36,6 +36,7 @@ llm_anthropic = ChatAnthropic(model_name="cc-sonnet-4-20250514-thinking", temper
 
 ### 2. M-Schema Table Structure Understanding
 
+- link：git clone https://github.com/XGenerationLab/M-Schema
 - Integrated M-Schema engine for deep parsing of database table structures
 - Automatically extracts table relationships, field types, and constraints
 - Supports table associations and field mapping for complex queries
@@ -145,6 +146,7 @@ M-Schema requires additional dependencies, ensure installation:
 
 ```bash
 # Install M-Schema-specific dependencies after activating conda
+cd ./livesqlbench/livesqlbench-main
 git clone https://github.com/XGenerationLab/M-Schema.git
 cd M-Schema
 pip install -r requirements.txt
@@ -379,3 +381,4 @@ def generate_sql_only(db_id: str, question: str) -> str:
 - This project is for academic research and Benchmark submission only
 - All model calls are based on public APIs, and call costs must be borne by the user
 - Example databases and structures are from the Archer Benchmark official dataset
+
